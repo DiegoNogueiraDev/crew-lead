@@ -23,7 +23,7 @@ class LeadAgents:
             verbose=True,
             allow_delegation=False,
             llm=self.llm,
-            tools=[self.google_maps_tool.search_businesses],
+            tools=[self.google_maps_tool],
             max_iter=5,
             max_execution_time=300
         )
@@ -40,7 +40,7 @@ class LeadAgents:
             verbose=True,
             allow_delegation=False,
             llm=self.llm,
-            tools=[self.data_enrichment_tool.enrich_contact_info],
+            tools=[self.data_enrichment_tool],
             max_iter=3,
             max_execution_time=180
         )

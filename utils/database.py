@@ -53,7 +53,7 @@ class LeadDatabase:
         conn.commit()
         conn.close()
     
-    def save_lead(self, lead: Dict) -> int:
+    def save_lead(self, lead: Dict) -> Optional[int]:
         """
         Salva um lead no banco de dados
         

@@ -1,5 +1,7 @@
 from crewai import Task
 from agents.lead_agents import LeadAgents
+from tools.google_maps_tool import GoogleMapsSearchTool
+from tools.data_enrichment_tool import DataEnrichmentTool
 
 class LeadTasks:
     """Classe que define as tarefas para captura de leads"""
@@ -29,7 +31,7 @@ class LeadTasks:
             """,
             agent=None,  # Será definido pelo crew
             expected_output="Lista de leads encontrados com todas as informações coletadas em formato JSON",
-            tools_to_use=["search_businesses"],
+            tools=[GoogleMapsSearchTool()],
             output_file="leads_encontrados.json"
         )
     
@@ -59,7 +61,7 @@ class LeadTasks:
             """,
             agent=None,  # Será definido pelo crew
             expected_output="Lista de leads enriquecidos com informações adicionais em formato JSON",
-            tools_to_use=["enrich_contact_info"],
+            tools=[DataEnrichmentTool()],
             output_file="leads_enriquecidos.json"
         )
     

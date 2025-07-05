@@ -18,9 +18,9 @@ class GoogleMapsSearchTool(BaseTool):
     description: str = "Ferramenta para pesquisar estabelecimentos no Google Maps usando diferentes métodos"
     
     def __init__(self):
-        super().__init__()
+        super().__init__(name=self.name, description=self.description)
         self.gmaps = googlemaps.Client(key=Config.GOOGLE_MAPS_API_KEY) if Config.GOOGLE_MAPS_API_KEY else None
-        self.driver = None
+        self.driver: Optional[webdriver.Chrome] = None
         
     def setup_driver(self):
         """Configura o driver do Selenium para web scraping"""
@@ -54,6 +54,7 @@ class GoogleMapsSearchTool(BaseTool):
             if self.gmaps:
                 return self._search_with_api(search_term, location, radius, max_results)
             else:
+                print("⚠️  Chave da API do Google Maps não configurada. Usando web scraping como alternativa.")
                 # Fallback para web scraping
                 return self._search_with_scraping(search_term, location, max_results)
                 
@@ -63,16 +64,19 @@ class GoogleMapsSearchTool(BaseTool):
     
     def _search_with_api(self, search_term: str, location: str, radius: int, max_results: int) -> List[Dict]:
         """Busca usando Google Maps API"""
+        if not self.gmaps:
+            return []
+            
         try:
             # Geocodificar a localização
-            geocode_result = self.gmaps.geocode(location)
+            geocode_result = self.gmaps.geocode(location)  # type: ignore
             if not geocode_result:
                 raise ValueError(f"Localização não encontrada: {location}")
             
             lat_lng = geocode_result[0]['geometry']['location']
             
             # Buscar estabelecimentos próximos
-            places_result = self.gmaps.places_nearby(
+            places_result = self.gmaps.places_nearby(  # type: ignore
                 location=lat_lng,
                 radius=radius,
                 keyword=search_term,
@@ -82,7 +86,7 @@ class GoogleMapsSearchTool(BaseTool):
             businesses = []
             for place in places_result.get('results', [])[:max_results]:
                 # Obter detalhes do estabelecimento
-                details = self.gmaps.place(
+                details = self.gmaps.place(  # type: ignore
                     place_id=place['place_id'],
                     fields=['name', 'formatted_address', 'formatted_phone_number', 
                            'website', 'rating', 'user_ratings_total', 'opening_hours',
@@ -121,6 +125,7 @@ class GoogleMapsSearchTool(BaseTool):
         """Busca usando web scraping do Google Maps"""
         try:
             self.setup_driver()
+            assert self.driver, "O driver do Selenium não foi inicializado corretamente."
             
             # Construir URL de busca
             query = f"{search_term} {location}"
@@ -131,30 +136,53 @@ class GoogleMapsSearchTool(BaseTool):
             
             # Aguardar carregamento dos resultados
             WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "[data-result-index]"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='feed']"))
             )
             
             businesses = []
-            result_elements = self.driver.find_elements(By.CSS_SELECTOR, "[data-result-index]")
             
-            for i, element in enumerate(result_elements[:max_results]):
-                try:
-                    # Clicar no resultado para obter mais detalhes
-                    element.click()
-                    time.sleep(2)
+            # Scroll para carregar mais resultados
+            feed = self.driver.find_element(By.CSS_SELECTOR, "div[role='feed']")
+            
+            last_height = self.driver.execute_script("return arguments[0].scrollHeight", feed)
+            
+            while len(businesses) < max_results:
+                self.driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", feed)
+                time.sleep(2)  # Aguardar carregamento
+                
+                result_elements = self.driver.find_elements(By.CSS_SELECTOR, "a[href*='https://www.google.com/maps/place/']")
+                
+                # Extrair informações
+                for element in result_elements[len(businesses):]:
+                    if len(businesses) >= max_results:
+                        break
                     
-                    # Extrair informações
-                    business = self._extract_business_info()
-                    if business:
-                        businesses.append(business)
+                    try:
+                        # Extrair informações básicas do link
+                        business_name = element.get_attribute("aria-label")
+                        if not business_name or business_name in [b.get('nome') for b in businesses]:
+                            continue
+
+                        element.click()
+                        time.sleep(2)
                         
-                except Exception as e:
-                    print(f"Erro ao extrair informações do estabelecimento {i}: {e}")
-                    continue
-                    
-                time.sleep(Config.SEARCH_DELAY)
-            
-            return businesses
+                        business_info = self._extract_business_info()
+                        if business_info:
+                            business_info['nome'] = business_name
+                            businesses.append(business_info)
+                            
+                    except Exception as e:
+                        print(f"Erro ao extrair dados de um estabelecimento: {e}")
+                        # Voltar para a página de resultados para continuar
+                        self.driver.back()
+                        time.sleep(2)
+                
+                new_height = self.driver.execute_script("return arguments[0].scrollHeight", feed)
+                if new_height == last_height:
+                    break
+                last_height = new_height
+
+            return businesses[:max_results]
             
         except Exception as e:
             print(f"Erro no web scraping: {e}")
@@ -165,60 +193,64 @@ class GoogleMapsSearchTool(BaseTool):
     
     def _extract_business_info(self) -> Optional[Dict]:
         """Extrai informações do estabelecimento da página"""
+        assert self.driver, "O driver do Selenium não está disponível."
+        
         try:
+            wait = WebDriverWait(self.driver, 5)
+            
             business = {}
             
-            # Nome
-            nome_element = self.driver.find_element(By.CSS_SELECTOR, "h1")
-            business['nome'] = nome_element.text if nome_element else ""
+            # Nome (já obtido antes, mas pode ser usado como fallback)
+            try:
+                h1_element = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "h1")))
+                business['nome'] = h1_element.text
+            except TimeoutException:
+                business['nome'] = ""
             
             # Endereço
             try:
-                endereco_element = self.driver.find_element(By.CSS_SELECTOR, "[data-item-id='address']")
-                business['endereco'] = endereco_element.text if endereco_element else ""
+                address_element = self.driver.find_element(By.CSS_SELECTOR, "[data-item-id='address']")
+                business['endereco'] = address_element.text
             except NoSuchElementException:
                 business['endereco'] = ""
             
             # Telefone
             try:
-                telefone_element = self.driver.find_element(By.CSS_SELECTOR, "[data-item-id*='phone']")
-                business['telefone'] = telefone_element.text if telefone_element else ""
+                phone_element = self.driver.find_element(By.CSS_SELECTOR, "[data-item-id*='phone']")
+                business['telefone'] = phone_element.text
             except NoSuchElementException:
                 business['telefone'] = ""
             
             # Website
             try:
-                website_element = self.driver.find_element(By.CSS_SELECTOR, "[data-item-id='authority']")
-                business['website'] = website_element.get_attribute('href') if website_element else ""
+                website_element = self.driver.find_element(By.CSS_SELECTOR, "a[data-item-id='authority']")
+                business['website'] = website_element.get_attribute('href')
             except NoSuchElementException:
                 business['website'] = ""
             
-            # Avaliação
+            # Avaliação e Categoria
             try:
-                rating_element = self.driver.find_element(By.CSS_SELECTOR, "[jsaction*='rating']")
-                business['avaliacao'] = float(rating_element.text.split()[0]) if rating_element else 0
+                header_text = self.driver.find_element(By.CSS_SELECTOR, "div.m6QErb.Pf6ghf.ecceSd.tLjsW").text
+                parts = header_text.split('·')
+                if len(parts) > 0 and any(char.isdigit() for char in parts[0]):
+                    business['avaliacao'] = float(parts[0].strip().replace(',', '.'))
+                if len(parts) > 1:
+                    business['categoria'] = parts[-1].strip()
             except (NoSuchElementException, ValueError):
-                business['avaliacao'] = 0
-            
-            # Categoria
-            try:
-                categoria_element = self.driver.find_element(By.CSS_SELECTOR, "[jsaction*='category']")
-                business['categoria'] = categoria_element.text if categoria_element else ""
-            except NoSuchElementException:
+                business['avaliacao'] = 0.0
                 business['categoria'] = ""
-            
-            # Valores padrão
-            business['numero_avaliacoes'] = 0
-            business['horario_funcionamento'] = ""
-            business['latitude'] = 0
-            business['longitude'] = 0
-            business['place_id'] = ""
-            business['fotos'] = []
+
+            # Voltar para a página de resultados
+            self.driver.back()
             
             return business
             
         except Exception as e:
-            print(f"Erro ao extrair informações: {e}")
+            print(f"Erro ao extrair informações detalhadas: {e}")
+            try:
+                self.driver.back()
+            except Exception as back_err:
+                print(f"Erro ao tentar voltar para a página anterior: {back_err}")
             return None
     
     def _format_opening_hours(self, opening_hours: Dict) -> str:
