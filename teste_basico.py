@@ -95,10 +95,10 @@ def test_config():
         print(f"📈 Máximo de resultados: {Config.MAX_RESULTS_PER_SEARCH}")
         
         # Verificar se as chaves estão configuradas
-        if Config.OPENAI_API_KEY:
-            print("✅ OpenAI API Key configurada")
+        if Config.OPENROUTER_API_KEY:
+            print("✅ OpenRouter API Key configurada")
         else:
-            print("⚠️ OpenAI API Key não configurada (necessária para agentes)")
+            print("⚠️ OpenRouter API Key não configurada (necessária para agentes)")
         
         if Config.GOOGLE_MAPS_API_KEY:
             print("✅ Google Maps API Key configurada")

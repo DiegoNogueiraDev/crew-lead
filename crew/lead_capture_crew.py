@@ -1,6 +1,7 @@
 from crewai import Agent, Task, Crew, Process
 from crewai.project import CrewBase, agent, crew, task
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 from agents.lead_agents import LeadAgents
 from tasks.lead_tasks import LeadTasks
 from tools.google_maps_tool import GoogleMapsSearchTool
@@ -22,11 +23,16 @@ class LeadCaptureCrew:
         self.database = LeadDatabase()
         self.logger = setup_logger()
         
-        # Configurar LLM
+        # Configurar LLM com OpenRouter
         self.llm = ChatOpenAI(
-            model_name="gpt-4",
+            model=Config.OPENROUTER_MODEL,
             temperature=0.1,
-            openai_api_key=Config.OPENAI_API_KEY
+            api_key=SecretStr(Config.OPENROUTER_API_KEY),
+            base_url=Config.OPENROUTER_BASE_URL,
+            default_headers={
+                "HTTP-Referer": Config.OPENROUTER_SITE_URL,
+                "X-Title": Config.OPENROUTER_SITE_NAME,
+            }
         )
         
         # Inicializar ferramentas

@@ -1,6 +1,6 @@
 from crewai.tools import BaseTool
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import re
 from typing import Dict, List, Optional
 import time
@@ -14,7 +14,10 @@ class DataEnrichmentTool(BaseTool):
     description: str = "Ferramenta para enriquecer dados de leads com informações de contato e detalhes adicionais"
     
     def __init__(self):
-        super().__init__()
+        super().__init__(
+            name=self.name,
+            description=self.description
+        )
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -112,8 +115,11 @@ class DataEnrichmentTool(BaseTool):
         # Buscar emails em links mailto
         mailto_links = soup.find_all('a', href=re.compile(r'^mailto:'))
         for link in mailto_links:
-            email = link.get('href').replace('mailto:', '')
-            emails.add(email)
+            if isinstance(link, Tag):
+                href = link.get('href')
+                if isinstance(href, str):
+                    email = href.replace('mailto:', '')
+                    emails.add(email)
         
         # Filtrar emails comuns de spam/placeholder
         spam_emails = ['example@example.com', 'test@test.com', 'admin@domain.com']
@@ -137,11 +143,13 @@ class DataEnrichmentTool(BaseTool):
         
         # Buscar em links
         for link in soup.find_all('a', href=True):
-            href = link.get('href')
-            for platform, pattern in patterns.items():
-                if re.search(pattern, href, re.IGNORECASE):
-                    social_media[platform] = href
-                    break
+            if isinstance(link, Tag):
+                href = link.get('href')
+                if isinstance(href, str):
+                    for platform, pattern in patterns.items():
+                        if re.search(pattern, href, re.IGNORECASE):
+                            social_media[platform] = href
+                            break
         
         return social_media
     
@@ -149,8 +157,11 @@ class DataEnrichmentTool(BaseTool):
         """Busca descrição da empresa"""
         # Buscar em meta description
         meta_desc = soup.find('meta', attrs={'name': 'description'})
-        if meta_desc:
-            return meta_desc.get('content', '')
+        if isinstance(meta_desc, Tag):
+            content = meta_desc.get('content', '')
+            if isinstance(content, list):
+                return ' '.join(map(str, content))
+            return str(content)
         
         # Buscar em seções sobre/sobre nós
         about_sections = soup.find_all(['div', 'section'], 
@@ -255,12 +266,11 @@ class DataEnrichmentTool(BaseTool):
         """Executa a ferramenta e retorna resultado como string"""
         import json
         
-        # Converter string para dict se necessário
-        if isinstance(lead_data, str):
-            try:
-                lead_data = json.loads(lead_data)
-            except json.JSONDecodeError:
-                return json.dumps({"erro": "Formato de dados inválido"}, ensure_ascii=False)
+        lead_data_dict: Dict
+        try:
+            lead_data_dict = json.loads(lead_data)
+        except (json.JSONDecodeError, TypeError):
+            return json.dumps({"erro": "Formato de dados inválido. Espera-se uma string JSON."}, ensure_ascii=False)
         
-        enriched_data = self.enrich_contact_info(lead_data)
+        enriched_data = self.enrich_contact_info(lead_data_dict)
         return json.dumps(enriched_data, indent=2, ensure_ascii=False) 

@@ -225,8 +225,8 @@ def exemplo_analise_dados():
     print("\n🔍 Insights Automáticos:")
     print("=" * 50)
     
-    categoria_top = max(dados_analise['categorias'], key=dados_analise['categorias'].get)
-    cidade_top = max(dados_analise['por_cidade'], key=dados_analise['por_cidade'].get)
+    categoria_top = max(dados_analise['categorias'], key=dados_analise['categorias'].__getitem__)
+    cidade_top = max(dados_analise['por_cidade'], key=dados_analise['por_cidade'].__getitem__)
     
     print(f"✅ Categoria com mais leads: {categoria_top}")
     print(f"🏆 Cidade com mais leads: {cidade_top}")

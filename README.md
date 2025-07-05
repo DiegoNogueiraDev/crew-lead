@@ -37,8 +37,10 @@ pip install -r requirements.txt
 Crie um arquivo `.env` na raiz do projeto:
 
 ```env
-# Configurações da API OpenAI
-OPENAI_API_KEY=sua_chave_openai_aqui
+# Configurações do OpenRouter
+OPENROUTER_API_KEY=sk-or-sua_chave_openrouter_aqui
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL=openai/gpt-4
 
 # Configurações do Google Maps API
 GOOGLE_MAPS_API_KEY=sua_chave_google_maps_aqui
@@ -154,11 +156,12 @@ crew-lead/
 
 ### 🗝️ Obter Chaves de API
 
-#### OpenAI API Key
-1. Acesse [OpenAI API](https://platform.openai.com/api-keys)
+#### OpenRouter API Key
+1. Acesse [OpenRouter](https://openrouter.ai/)
 2. Crie uma conta ou faça login
-3. Gere uma nova chave de API
+3. Vá para "Keys" e crie uma nova chave de API
 4. Adicione créditos à sua conta
+5. Escolha o modelo desejado (ex: openai/gpt-4, anthropic/claude-3-opus)
 
 #### Google Maps API Key
 1. Acesse [Google Cloud Console](https://console.cloud.google.com/)

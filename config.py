@@ -1,13 +1,24 @@
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Carregar variáveis de ambiente do .env se disponível
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv não está disponível, usar apenas variáveis de ambiente do sistema
+    pass
 
 class Config:
     """Configurações do projeto de captura de leads"""
     
-    # Configurações da API OpenAI
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    # Configurações da API OpenRouter
+    OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+    OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4")
+    
+    # Configurações opcionais do OpenRouter
+    OPENROUTER_SITE_URL = os.getenv("OPENROUTER_SITE_URL", "")
+    OPENROUTER_SITE_NAME = os.getenv("OPENROUTER_SITE_NAME", "")
     
     # Configurações do Google Maps API
     GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "")
@@ -32,7 +43,7 @@ class Config:
     def validate(cls):
         """Valida se as configurações necessárias estão definidas"""
         required_vars = [
-            "OPENAI_API_KEY",
+            "OPENROUTER_API_KEY",
             "GOOGLE_MAPS_API_KEY"
         ]
         
