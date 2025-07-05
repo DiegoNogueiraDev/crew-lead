@@ -1,0 +1,1 @@
+# Módulo agents para definição dos agentes CrewAI 

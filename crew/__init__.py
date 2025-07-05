@@ -1,0 +1,1 @@
+# Módulo crew para organização dos agentes CrewAI 

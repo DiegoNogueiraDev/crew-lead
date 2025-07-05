@@ -1,0 +1,1 @@
+# Módulo tasks para definição das tarefas CrewAI 
