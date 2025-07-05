@@ -34,27 +34,69 @@ Este script irá:
 3. Instalar todas as dependências do `requirements.txt`.
 4. Criar um arquivo de configuração `.env` a partir do exemplo.
 
-### Passo 2: Configurar Chaves de API
+### Passo 2: Configurar Chaves de API e Variáveis de Ambiente
 
-Você precisará de uma chave de API do **OpenRouter** para que os agentes de IA funcionem. O uso da chave do **Google Maps** é opcional, mas altamente recomendado para melhorar a qualidade e a velocidade das buscas.
-
-Edite o arquivo `.env` que foi criado na raiz do projeto:
+Edite o arquivo `.env` que foi criado na raiz do projeto. Abaixo está um exemplo completo com todas as opções possíveis e comentários explicando cada uma delas.
 
 ```env
-# -----------------------------------------------------------------
-# CHAVE OBRIGATÓRIA: Para os agentes de IA funcionarem
-# -----------------------------------------------------------------
+# =================================================================
+#                 CONFIGURAÇÕES OBRIGATÓRIAS
+# =================================================================
+
+# CHAVE DA API DO OPENROUTER
+# Essencial para o funcionamento dos agentes de IA.
 # 1. Acesse: https://openrouter.ai/keys
 # 2. Crie uma chave e adicione créditos à sua conta.
 OPENROUTER_API_KEY=sk-or-sua_chave_openrouter_aqui
 
-# -----------------------------------------------------------------
-# CHAVE OPCIONAL: Para buscas mais rápidas e precisas
-# -----------------------------------------------------------------
+# MODELO DE LINGUAGEM (LLM)
+# Modelo que será usado pelos agentes. Veja a lista de modelos disponíveis
+# em https://openrouter.ai/models.
+# Exemplos: "openai/gpt-4o", "anthropic/claude-3.5-sonnet", "google/gemini-pro"
+OPENROUTER_MODEL=openai/gpt-4o
+
+# =================================================================
+#                 CONFIGURAÇÕES RECOMENDADAS
+# =================================================================
+
+# CHAVE DA API DO GOOGLE MAPS
+# Altamente recomendado para buscas mais rápidas, precisas e com mais dados.
+# Se deixada em branco, o sistema usará web scraping (mais lento e instável).
 # 1. Acesse: https://console.cloud.google.com/
-# 2. Ative as APIs: Maps JavaScript, Places, e Geocoding.
+# 2. Ative as APIs: Maps JavaScript, Places e Geocoding.
 # 3. Crie uma chave de API.
 GOOGLE_MAPS_API_KEY=sua_chave_google_maps_aqui
+
+# =================================================================
+#                 CONFIGURAÇÕES OPCIONAIS E AVANÇADAS
+# =================================================================
+
+# MODO HEADLESS PARA SCRAPING
+# Define se o navegador do Selenium rodará em segundo plano (true) ou visível (false).
+# Mantenha como "true" para melhor performance em servidores.
+HEADLESS_MODE=True
+
+# ATRASO ENTRE BUSCAS (EM SEGUNDOS)
+# Delay para o web scraping não sobrecarregar os servidores do Google.
+# Aumente este valor se encontrar erros de "rate limiting".
+SEARCH_DELAY=2
+
+# CAMINHO PARA O CHROMEDRIVER
+# Apenas modifique se o chromedriver não estiver em um caminho padrão.
+CHROME_DRIVER_PATH=/usr/bin/chromedriver
+
+# URL DO BANCO DE DADOS
+# Por padrão, usa um arquivo SQLite local. Pode ser alterado para PostgreSQL, etc.
+DATABASE_URL=sqlite:///leads.db
+
+# MODO DEBUG
+# Ativa logs mais detalhados para depuração.
+DEBUG=True
+
+# URL e Nome do Site (para OpenRouter)
+# Informações opcionais usadas para identificação nos logs do OpenRouter.
+OPENROUTER_SITE_URL=https://meuprojeto.com
+OPENROUTER_SITE_NAME=Meu Projeto de Leads
 ```
 
 No arquivo `.env` você também pode configurar o modelo de linguagem a ser usado (ex: `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`, etc.).
