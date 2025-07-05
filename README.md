@@ -1,306 +1,148 @@
-# 🎯 Sistema de Captura de Leads do Google Maps
+# Sistema de Captura e Qualificação de Leads com IA
 
-Um sistema avançado de captura de leads do Google Maps utilizando **CrewAI** para automatizar o processo de busca, enriquecimento e qualificação de leads.
+Este é um sistema avançado para captura de leads do Google Maps, construído com **CrewAI**. Ele automatiza todo o processo de busca, enriquecimento e qualificação de contatos comerciais, transformando uma tarefa manual e demorada em um fluxo de trabalho inteligente e eficiente.
 
-## 🚀 Funcionalidades
+## 🚀 Principais Funcionalidades
 
-### 🔍 Captura Inteligente
-- **Busca no Google Maps**: Utiliza API do Google Maps e web scraping
-- **Múltiplos critérios**: Busca por termo, localização e raio personalizado
-- **Dados completos**: Nome, endereço, telefone, email, website, avaliações
+- **🔍 Captura Inteligente**: Combina a precisão da **API do Google Maps** com a abrangência do **web scraping** para extrair o máximo de informações.
+- **🤖 Automação com Agentes de IA**: Utiliza um time de agentes autônomos (CrewAI) para orquestrar o trabalho:
+    - **Agente Pesquisador**: Encontra negócios com base nos seus critérios.
+    - **Agente Enriquecedor**: Busca dados adicionais como e-mails, redes sociais e tecnologias usadas no site.
+    - **Agente Validador**: Analisa e classifica os leads, atribuindo um score de qualidade.
+    - **Agente Organizador**: Formata e prepara os dados para exportação.
+- **📊 Dashboard Interativo**: Uma interface web amigável (Streamlit) para iniciar buscas, visualizar resultados, aplicar filtros e exportar dados.
+- **💾 Armazenamento Persistente**: Salva todos os leads capturados em um banco de dados **SQLite**, permitindo consultas futuras.
+- **📤 Exportação Flexível**: Exporte seus leads qualificados para formatos como **Excel, CSV e JSON**.
 
-### 🤖 Automação com CrewAI
-- **Agente Pesquisador**: Especializado em encontrar leads no Google Maps
-- **Agente Enriquecedor**: Adiciona informações de contato e detalhes
-- **Agente Validador**: Classifica leads por qualidade e relevância
-- **Agente Organizador**: Formata e exporta os resultados
+## 🛠️ Instalação e Configuração
 
-### 📊 Interface Web Moderna
-- **Dashboard interativo**: Visualização de métricas e gráficos
-- **Gerenciamento de leads**: Edição, filtros e exportação
-- **Relatórios avançados**: Análise de performance e comparações
+Siga os 3 passos abaixo para deixar o sistema pronto para uso.
 
-## 🛠️ Instalação
+### Passo 1: Instalação Automática
 
-### 1. Clonar o Repositório
+O projeto inclui um script que cuida de toda a configuração inicial.
+
 ```bash
-git clone https://github.com/Diego/crew-lead.git
-cd crew-lead
+# Concede permissão de execução e roda o script
+chmod +x ./install.sh
+./install.sh
 ```
 
-### 2. Instalar Dependências
-```bash
-pip install -r requirements.txt
-```
+Este script irá:
+1. Criar um ambiente virtual (`venv`).
+2. Ativar o ambiente.
+3. Instalar todas as dependências do `requirements.txt`.
+4. Criar um arquivo de configuração `.env` a partir do exemplo.
 
-### 3. Configurar Variáveis de Ambiente
-Crie um arquivo `.env` na raiz do projeto:
+### Passo 2: Configurar Chaves de API
+
+Você precisará de uma chave de API do **OpenRouter** para que os agentes de IA funcionem. O uso da chave do **Google Maps** é opcional, mas altamente recomendado para melhorar a qualidade e a velocidade das buscas.
+
+Edite o arquivo `.env` que foi criado na raiz do projeto:
 
 ```env
-# Configurações do OpenRouter
+# -----------------------------------------------------------------
+# CHAVE OBRIGATÓRIA: Para os agentes de IA funcionarem
+# -----------------------------------------------------------------
+# 1. Acesse: https://openrouter.ai/keys
+# 2. Crie uma chave e adicione créditos à sua conta.
 OPENROUTER_API_KEY=sk-or-sua_chave_openrouter_aqui
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_MODEL=openai/gpt-4
 
-# Configurações do Google Maps API
+# -----------------------------------------------------------------
+# CHAVE OPCIONAL: Para buscas mais rápidas e precisas
+# -----------------------------------------------------------------
+# 1. Acesse: https://console.cloud.google.com/
+# 2. Ative as APIs: Maps JavaScript, Places, e Geocoding.
+# 3. Crie uma chave de API.
 GOOGLE_MAPS_API_KEY=sua_chave_google_maps_aqui
-
-# Configurações do Selenium
-CHROME_DRIVER_PATH=/usr/bin/chromedriver
-HEADLESS_MODE=True
-
-# Configurações do banco de dados
-DATABASE_URL=sqlite:///leads.db
-
-# Configurações gerais
-DEBUG=True
-MAX_RESULTS_PER_SEARCH=50
-SEARCH_DELAY=2
 ```
 
-### 4. Instalar ChromeDriver
+No arquivo `.env` você também pode configurar o modelo de linguagem a ser usado (ex: `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`, etc.).
+
+### Passo 3: Instalar o ChromeDriver (se necessário)
+
+Para a função de web scraping, o sistema utiliza o Selenium, que requer o ChromeDriver.
+
 ```bash
-# Ubuntu/Debian
+# Para sistemas baseados em Debian/Ubuntu
+sudo apt-get update
 sudo apt-get install chromium-chromedriver
 
-# macOS
+# Para macOS (usando Homebrew)
 brew install chromedriver
-
-# Windows
-# Baixar do site oficial: https://chromedriver.chromium.org/
 ```
+Se você encontrar problemas, verifique se a versão do ChromeDriver é compatível com a do seu navegador Chrome.
 
-## 🎮 Como Usar
+## 🎮 Como Usar o Sistema
+
+Você pode interagir com o sistema de duas formas:
 
 ### 🖥️ Interface Web (Recomendado)
-```bash
-streamlit run app.py
-```
 
-Acesse: `http://localhost:8501`
+A forma mais simples de usar. Ideal para visualizar e gerenciar os leads.
+
+```bash
+# Execute o script para iniciar a aplicação web
+./start.sh
+```
+Acesse o dashboard em `http://localhost:8501`.
 
 ### 💻 Linha de Comando
+
+Para automação e integração com outros scripts.
+
 ```bash
-python main.py --termo "restaurante" --localizacao "São Paulo, SP" --raio 10000 --max-resultados 50
-```
+# Lembre-se de ativar o ambiente virtual primeiro
+source venv/bin/activate
 
-#### Parâmetros disponíveis:
-- `--termo, -t`: Termo de busca (obrigatório)
-- `--localizacao, -l`: Localização para busca
-- `--raio, -r`: Raio de busca em metros (padrão: 10000)
-- `--max-resultados, -m`: Número máximo de resultados (padrão: 50)
-- `--arquivo-saida, -o`: Arquivo de saída (padrão: leads_YYYYMMDD_HHMMSS.xlsx)
-
-### 📖 Exemplos de Uso
-
-#### Buscar Restaurantes em São Paulo
-```bash
+# Exemplo: Buscar restaurantes em São Paulo
 python main.py --termo "restaurante" --localizacao "São Paulo, SP"
+
+# Exemplo: Buscar advogados em Belo Horizonte com mais resultados
+python main.py -t "advogado" -l "Belo Horizonte, MG" -m 100
 ```
 
-#### Buscar Clínicas em Rio de Janeiro
-```bash
-python main.py --termo "clínica médica" --localizacao "Rio de Janeiro, RJ" --raio 15000
-```
+**Parâmetros disponíveis:**
 
-#### Buscar Advogados em Belo Horizonte
-```bash
-python main.py --termo "advogado" --localizacao "Belo Horizonte, MG" --max-resultados 100
-```
+| Parâmetro           | Atalho | Descrição                                             | Padrão                               |
+|---------------------|--------|-------------------------------------------------------|--------------------------------------|
+| `--termo`           | `-t`   | Termo de busca (ex: "dentista", "escritório de TI").    | **Obrigatório**                      |
+| `--localizacao`     | `-l`   | A cidade e estado para a busca (ex: "Curitiba, PR").    | **Obrigatório**                      |
+| `--raio`            | `-r`   | Raio da busca em metros.                                | `10000`                              |
+| `--max-resultados`  | `-m`   | Número máximo de resultados a serem capturados.       | `50`                                 |
+| `--arquivo-saida`   | `-o`   | Nome do arquivo Excel para exportação.                | `leads_AAAAMMDD_HHMMSS.xlsx`         |
 
-## 🏗️ Arquitetura do Sistema
+## 🏗️ Arquitetura e Estrutura do Projeto
 
-### 📁 Estrutura do Projeto
+O sistema é modular e organizado para facilitar a manutenção e customização.
+
 ```
 crew-lead/
-├── main.py                 # Ponto de entrada principal
-├── app.py                  # Interface web Streamlit
-├── config.py               # Configurações do sistema
-├── requirements.txt        # Dependências Python
-├── README.md              # Documentação
+├── 🚀 main.py              # Ponto de entrada para a CLI
+├── 🌐 app.py               # Interface web com Streamlit
+├── ⚙️ config.py             # Carrega as configurações do .env
+├── 📦 requirements.txt     # Dependências do projeto
+├── 📄 README.md            # Esta documentação
+├── 🔧 install.sh           # Script de instalação
+├── 🚀 start.sh             # Script para iniciar a interface web
 │
-├── crew/                   # Módulo CrewAI
-│   ├── __init__.py
-│   └── lead_capture_crew.py
-│
-├── agents/                 # Agentes CrewAI
-│   ├── __init__.py
-│   └── lead_agents.py
-│
-├── tasks/                  # Tarefas CrewAI
-│   ├── __init__.py
-│   └── lead_tasks.py
-│
-├── tools/                  # Ferramentas personalizadas
-│   ├── __init__.py
-│   ├── google_maps_tool.py
-│   └── data_enrichment_tool.py
-│
-├── utils/                  # Utilitários
-│   ├── __init__.py
-│   ├── database.py
-│   └── logger.py
-│
-└── data/                   # Dados e exportações
-    ├── leads.db           # Banco de dados SQLite
-    └── exports/           # Arquivos exportados
+├── 🤖 crew/                # Orquestração dos agentes (CrewAI)
+├── 👥 agents/              # Definição dos papéis e objetivos dos agentes
+├── 📋 tasks/               # Definição das tarefas que os agentes executam
+├── 🛠️ tools/               # Ferramentas que os agentes usam (ex: busca no Maps)
+└── 🔧 utils/               # Módulos de utilidade (banco de dados, logs)
 ```
 
-### 🔄 Fluxo de Trabalho
-1. **Pesquisa**: Agente pesquisador busca estabelecimentos no Google Maps
-2. **Enriquecimento**: Agente enriquecedor adiciona informações extras
-3. **Validação**: Agente validador classifica leads por qualidade
-4. **Organização**: Agente organizador formata e exporta resultados
+## 🆘 Troubleshooting
 
-## 🔧 Configuração Avançada
-
-### 🗝️ Obter Chaves de API
-
-#### OpenRouter API Key
-1. Acesse [OpenRouter](https://openrouter.ai/)
-2. Crie uma conta ou faça login
-3. Vá para "Keys" e crie uma nova chave de API
-4. Adicione créditos à sua conta
-5. Escolha o modelo desejado (ex: openai/gpt-4, anthropic/claude-3-opus)
-
-#### Google Maps API Key
-1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
-2. Crie um projeto ou selecione um existente
-3. Ative as APIs:
-   - Maps JavaScript API
-   - Places API
-   - Geocoding API
-4. Crie credenciais (API Key)
-5. Configure restrições de uso
-
-### 📊 Banco de Dados
-
-O sistema usa SQLite por padrão, mas pode ser configurado para outros bancos:
-
-```python
-# config.py
-DATABASE_URL = "postgresql://user:password@localhost/leads"
-# ou
-DATABASE_URL = "mysql://user:password@localhost/leads"
-```
-
-### 🔍 Customização de Agentes
-
-Você pode customizar os agentes editando `agents/lead_agents.py`:
-
-```python
-def pesquisador_leads(self) -> Agent:
-    return Agent(
-        role='Pesquisador de Leads Personalizado',
-        goal='Seu objetivo personalizado',
-        backstory='Sua história personalizada',
-        # ... outras configurações
-    )
-```
-
-## 📊 Métricas e Monitoramento
-
-### 📈 Métricas Disponíveis
-- **Leads capturados**: Número total de leads encontrados
-- **Taxa de qualificação**: Percentual de leads qualificados
-- **Cobertura geográfica**: Distribuição por localização
-- **Performance por categoria**: Análise por tipo de negócio
-
-### 📋 Logs e Debugging
-Os logs são salvos em `logs/lead_capture_YYYYMMDD.log`:
-
-```python
-# Habilitar debug
-DEBUG=True
-```
-
-## 🚨 Limitações e Considerações
-
-### ⚠️ Rate Limiting
-- Google Maps API: 1000 requests/dia (gratuito)
-- Selenium: Delay configurável entre requests
-- Recomendado: `SEARCH_DELAY=2` segundos
-
-### 🔒 Aspectos Legais
-- Respeite os termos de uso do Google Maps
-- Não use para spam ou atividades não autorizadas
-- Considere a LGPD para dados pessoais
-
-### 🌐 Proxy e VPN
-Para uso intensivo, considere usar proxy:
-
-```python
-# tools/google_maps_tool.py
-chrome_options.add_argument('--proxy-server=socks5://127.0.0.1:9050')
-```
+- **Erro de ChromeDriver**: Verifique se a versão instalada é compatível com seu Google Chrome. Ocasionalmente, pode ser necessário especificar o caminho para o executável no `.env`.
+- **Erro de Chave de API**: Garanta que o arquivo `.env` está na raiz do projeto e que as chaves foram copiadas corretamente, sem espaços extras. Verifique também se há créditos na sua conta OpenRouter.
+- **Erro de `ModuleNotFoundError`**: Certifique-se de que o ambiente virtual está ativado (`source venv/bin/activate`) antes de executar os scripts Python.
 
 ## 🤝 Contribuindo
 
-### 🐛 Reportar Bugs
-1. Verifique se o bug já foi reportado
-2. Crie uma issue detalhada
-3. Inclua logs e informações do sistema
-
-### 🔧 Desenvolvimento
-```bash
-# Instalar dependências de desenvolvimento
-pip install -r requirements-dev.txt
-
-# Executar testes
-pytest tests/
-
-# Verificar código
-black .
-flake8 .
-```
-
-## 📝 Changelog
-
-### v1.0.0 (2024-01-15)
-- ✅ Implementação inicial do sistema
-- ✅ Interface web com Streamlit
-- ✅ Agentes CrewAI para automação
-- ✅ Suporte a Google Maps API e web scraping
-- ✅ Banco de dados SQLite integrado
-
-## 📞 Suporte
-
-### 🆘 Problemas Comuns
-
-#### Erro de ChromeDriver
-```bash
-# Verificar versão do Chrome
-google-chrome --version
-
-# Baixar ChromeDriver compatível
-# https://chromedriver.chromium.org/downloads
-```
-
-#### Erro de API Key
-```bash
-# Verificar se as chaves estão definidas
-echo $OPENAI_API_KEY
-echo $GOOGLE_MAPS_API_KEY
-```
-
-#### Erro de Dependências
-```bash
-# Atualizar pip
-pip install --upgrade pip
-
-# Reinstalar dependências
-pip install -r requirements.txt --force-reinstall
-```
-
-### 📧 Contato
-- **Email**: suporte@crewlead.com
-- **GitHub Issues**: [github.com/seu-usuario/crew-lead/issues](https://github.com/seu-usuario/crew-lead/issues)
-- **Discord**: [discord.gg/crewlead](https://discord.gg/crewlead)
+Contribuições são bem-vindas! Sinta-se à vontade para abrir uma *issue* para reportar bugs ou sugerir novas funcionalidades.
 
 ## 📜 Licença
 
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
----
-
-🚀 **Desenvolvido com CrewAI** - Automatize sua geração de leads hoje mesmo! 
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes. 
